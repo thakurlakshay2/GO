@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 //main function , first execution
 func main(){
@@ -42,5 +45,8 @@ func main(){
 	fmt.Println((ranger1))
 	fmt.Println((ranger2))
 	fmt.Println((ranger3))
+
+	greetings :="hello with friends"
+	fmt.Println(strings.Contains(greetings,"hello"))
 
 }

@@ -103,6 +103,15 @@ func main(){
 
 	Hello("lakshay")
 
+	//MAP
+	mapFunc()
+
+	//TYPES
+	types()
+
+	//POINTERS
+	pointers()
+
 }
 
 //FUNCTION

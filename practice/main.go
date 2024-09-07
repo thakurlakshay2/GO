@@ -112,6 +112,21 @@ func main(){
 	//POINTERS
 	pointers()
 
+	//Struct  && //Receiver function
+	billData :=makeNewBill("lakshay")
+	fmt.Println(billData)
+	fmt.Println(billData.formatBill())  //This is how you access receiver function of bill
+
+
+	//SWITCH 
+	switchFunc()
+
+	//Interface 
+	createData()
+
+
+
+
 }
 
 //FUNCTION

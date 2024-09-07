@@ -11,7 +11,6 @@
     <div class="center">
       <h1>Amazing Chat Application</h1>
       <h3 id="chat-header">Currently in chat: general</h3>
-      <h3 id="connection-header">Connected to Websocket: false</h3>
 
       <!--
         Here is a form that allows us to select what Chatroom to be in
@@ -45,30 +44,6 @@
         <input type="text" id="message" name="message" /><br /><br />
         <input type="submit" value="Send message" />
       </form>
-
-      <!--
-        login form is used to login
-        -->
-      <div style="border: 3px solid black; margin-top: 30px">
-        <form id="login-form" onsubmit="handleSubmit(event)">
-          <label for="username">username:</label>
-          <input type="text" id="username" name="username" /><br />
-          <label for="password">password:</label>
-          <input type="password" id="password" name="password" /><br /><br />
-          <input type="submit" value="Login" />
-        </form>
-
-        <script>
-          function handleSubmit(event) {
-            event.preventDefault();
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-
-            // You can add your login logic here, like sending the data via AJAX/fetch
-            console.log("Username:", username, "Password:", password);
-          }
-        </script>
-      </div>
     </div>
 
     <!--
@@ -92,26 +67,6 @@
         }
       }
       /**
-       * SendMessageEvent is used to send messages to other clients
-       * */
-      class SendMessageEvent {
-        constructor(message, from) {
-          this.message = message;
-          this.from = from;
-        }
-      }
-      /**
-       * NewMessageEvent is messages comming from clients
-       * */
-      class NewMessageEvent {
-        constructor(message, from, sent) {
-          this.message = message;
-          this.from = from;
-          this.sent = sent;
-        }
-      }
-
-      /**
        * routeEvent is a proxy function that routes
        * events into their correct Handler
        * based on the type field
@@ -122,41 +77,14 @@
         }
         switch (event.type) {
           case "new_message":
-            // Format payload
-            const messageEvent = Object.assign(
-              new NewMessageEvent(),
-              event.payload
-            );
-            appendChatMessage(messageEvent);
+            console.log("new message");
             break;
           default:
             alert("unsupported message type");
             break;
         }
       }
-      /**
-       * appendChatMessage takes in new messages and adds them to the chat
-       * */
-      function appendChatMessage(messageEvent) {
-        var date = new Date(messageEvent.sent);
-        // format message
-        const formattedMsg = `${date.toLocaleString()}: ${
-          messageEvent.message
-        }`;
-        // Append Message
-        textarea = document.getElementById("chatmessages");
-        textarea.innerHTML = textarea.innerHTML + "\n" + formattedMsg;
-        textarea.scrollTop = textarea.scrollHeight;
-      }
 
-      /**
-       * ChangeChatRoomEvent is used to switch chatroom
-       * */
-      class ChangeChatRoomEvent {
-        constructor(name) {
-          this.name = name;
-        }
-      }
       /**
        * changeChatRoom will update the value of selectedchat
        * and also notify the server that it changes chatroom
@@ -165,14 +93,7 @@
         // Change Header to reflect the Changed chatroom
         var newchat = document.getElementById("chatroom");
         if (newchat != null && newchat.value != selectedchat) {
-          selectedchat = newchat.value;
-          header = document.getElementById("chat-header").innerHTML =
-            "Currently in chat: " + selectedchat;
-
-          let changeEvent = new ChangeChatRoomEvent(selectedchat);
-          sendEvent("change_room", changeEvent);
-          textarea = document.getElementById("chatmessages");
-          textarea.innerHTML = `You changed room into: ${selectedchat}`;
+          console.log(newchat);
         }
         return false;
       }
@@ -182,8 +103,7 @@
       function sendMessage() {
         var newmessage = document.getElementById("message");
         if (newmessage != null) {
-          let outgoingEvent = new SendMessageEvent(newmessage.value, "percy");
-          sendEvent("send_message", outgoingEvent);
+          sendEvent("send_message", newmessage.value);
         }
         return false;
       }
@@ -200,60 +120,19 @@
         conn.send(JSON.stringify(event));
       }
       /**
-       * login will send a login request to the server and then
-       * connect websocket
+       * Once the website loads, we want to apply listeners and connect to websocket
        * */
-      function login() {
-        connectWebsocket("dawoid");
-        // let formData = {
-        //   username: document.getElementById("username").value,
-        //   password: document.getElementById("password").value,
-        // };
-        // // Send the request
-        // fetch("login", {
-        //   method: "post",
-        //   body: JSON.stringify(formData),
-        //   mode: "cors",
-        // })
-        //   .then((response) => {
-        //     if (response.ok) {
-        //       return response.json();
-        //     } else {
-        //       throw "unauthorized";
-        //     }
-        //   })
-        //   .then((data) => {
-        //     // Now we have a OTP, send a Request to Connect to WebSocket
-        //     connectWebsocket(data.otp);
-        //   })
-        //   .catch((e) => {
-        //     alert(e);
-        //   });
-        return true;
-      }
-      /**
-       * ConnectWebsocket will connect to websocket and add listeners
-       * */
-      function connectWebsocket(otp) {
+      window.onload = function () {
+        // Apply our listener functions to the submit event on both forms
+        // we do it this way to avoid redirects
+        document.getElementById("chatroom-selection").onsubmit = changeChatRoom;
+        document.getElementById("chatroom-message").onsubmit = sendMessage;
+
         // Check if the browser supports WebSocket
         if (window["WebSocket"]) {
           console.log("supports websockets");
-          // Connect to websocket using OTP as a GET parameter
-          conn = new WebSocket(
-            "wss://" + document.location.host + "/ws?otp=" + otp
-          );
-
-          // Onopen
-          conn.onopen = function (evt) {
-            document.getElementById("connection-header").innerHTML =
-              "Connected to Websocket: true";
-          };
-
-          conn.onclose = function (evt) {
-            // Set disconnected
-            document.getElementById("connection-header").innerHTML =
-              "Connected to Websocket: false";
-          };
+          // Connect to websocket
+          conn = new WebSocket("ws://" + document.location.host + "/ws");
 
           // Add a listener to the onmessage event
           conn.onmessage = function (evt) {
@@ -268,16 +147,6 @@
         } else {
           alert("Not supporting websockets");
         }
-      }
-      /**
-       * Once the website loads
-       * */
-      window.onload = function () {
-        // Apply our listener functions to the submit event on both forms
-        // we do it this way to avoid redirects
-        document.getElementById("chatroom-selection").onsubmit = changeChatRoom;
-        document.getElementById("chatroom-message").onsubmit = sendMessage;
-        document.getElementById("login-form").onsubmit = login;
       };
     </script>
 
